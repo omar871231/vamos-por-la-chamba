@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Chamba">
+<meta name="theme-color" content="#0f172a">
+<title>Vamos por la chamba v2.32</title>
+<style>
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',Helvetica,Arial,sans-serif}
+body{margin:0;background:#0f172a;color:#e2e8f0;min-height:100vh;padding-bottom:env(safe-area-inset-bottom)}
+.card{background:#1e293b;border:1px solid #334155;border-radius:24px;padding:22px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.logo{background:#10b981;color:#0f172a;font-weight:900;padding:10px 14px;border-radius:14px;display:inline-block;font-size:20px}
+input,select,textarea{width:100%;background:#0f172a;border:1px solid #334155;color:#e2e8f0;border-radius:12px;padding:12px;font-size:16px;outline:none}
+input[type=checkbox]{width:auto}
+input:focus,select:focus,textarea:focus{border-color:#10b981}
+.btn{border:0;border-radius:12px;padding:11px 14px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent}
+.btn-green{background:#059669;color:white}.btn-green:active{background:#047857}
+.btn-sky{background:#0e7490;color:white}.btn-dark{background:#334155;color:#cbd5e1}.btn-red{background:#450a0a;color:#fca5a5;border:1px solid #7f1d1d}
+.mini{font-size:10px;padding:4px 7px}
+.badge{font-size:11px;padding:3px 8px;border-radius:8px;display:inline-block;font-weight:600}
+.header{position:sticky;top:0;z-index:20;background:rgba(30,41,59,.95);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid #334155;padding:12px 14px;padding-top:calc(12px + env(safe-area-inset-top))}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;background:rgba(15,23,42,.6);border:1px solid #334155;border-radius:12px;padding:10px}
+.filters input,.filters select{width:auto;flex:1 1 120px;min-width:110px;padding:8px 10px;font-size:13px}
+.job{background:rgba(15,23,42,.8);border:1px solid #334155;border-radius:14px;padding:14px;margin-bottom:12px}
+.job-top{display:flex;gap:10px}
+.avatar{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:11px;flex-shrink:0}
+.small{font-size:12px;color:#94a3b8}.tiny{font-size:11px;color:#64748b}
+.hidden{display:none!important}
+.scroll{max-height:none}
+.modal{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.82);z-index:60;display:flex;align-items:center;justify-content:center;padding:14px}
+.modal .card{max-width:520px;max-height:92vh;overflow:auto;-webkit-overflow-scrolling:touch}
+.rowb{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.xbtn{background:none;border:0;color:#94a3b8;font-size:22px;padding:4px 8px}
+.docrow{display:flex;justify-content:space-between;align-items:center;background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:8px;margin-top:6px;gap:6px}
+.doclbl{display:flex;gap:6px;font-size:12px;align-items:center}
+.docact{display:flex;gap:4px;align-items:center}
+.fname{max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#065f46;color:#ecfdf5;padding:11px 16px;border-radius:12px;font-size:13px;font-weight:600;z-index:100;max-width:90%;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#estadoAlmacen{margin-top:8px;font-size:11px;border-radius:8px;padding:6px 9px}
+.ok{background:#022c22;color:#6ee7b7;border:1px solid #065f46}
+.warn{background:#422006;color:#fcd34d;border:1px solid #92400e}
+</style>
+</head>
+<body>
+
+<!-- APP (sin login) -->
+<div id="appContent">
+  <div class="header">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;gap:10px;align-items:center"><div class="logo">VP</div><div><div style="font-weight:800">Vamos por la chamba</div><div class="tiny">Omar Santiago Coca • v2.32</div></div></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        <button class="btn btn-sky" onclick="exportarICloud()">☁️ Exportar</button>
+        <button class="btn btn-dark" onclick="importarICloud()">📥 Importar</button>
+        <button class="btn btn-green" onclick="abrirModalNuevaPostulacion()">+ Nueva</button>
+        <button class="btn btn-dark" onclick="alternarArchivados()" id="btnVerArchivados">📁 (0)</button>
+        <button class="btn btn-dark" onclick="recuperarBase()" title="Recupera las 7 marcas originales">🔄 7 marcas</button>
+      </div>
+    </div>
+    <div id="estadoAlmacen" class="ok">Revisando almacenamiento…</div>
+    <div class="filters">
+      <input id="filtroBusqueda" placeholder="🔍 Buscar marca, puesto..." oninput="renderizarPostulaciones()">
+      <select id="filtroAvance" onchange="renderizarPostulaciones()"><option value="">📈 Avance: Todos</option><option>Postulación</option><option>Entrevista RH</option><option>Pruebas</option><option>Entrevista Operaciones</option><option>Documentación</option><option>Oferta / Contratación</option><option>Descartado / Archivado</option></select>
+      <select id="filtroSueldo" onchange="renderizarPostulaciones()"><option value="">💰 Sueldo: Todos</option><option value="0-14000">Hasta $14k</option><option value="14001-18000">$14k-18k</option><option value="18001-999999">+$18k</option></select>
+      <select id="filtroDistancia" onchange="renderizarPostulaciones()"><option value="">📍 Distancia: Todas</option><option value="0-10">0-10 km</option><option value="11-20">11-20 km</option><option value="21-999">+20 km</option></select>
+      <select id="filtroPrestaciones" onchange="renderizarPostulaciones()"><option value="">✨ Prestaciones</option><option value="SGMM">SGMM</option><option value="Fondo">Fondo ahorro</option><option value="Comisiones">Comisiones</option></select>
+      <select id="filtroMejorOferta" onchange="renderizarPostulaciones()" style="border-color:#065f46;color:#6ee7b7;font-weight:700"><option value="">🏆 Orden: Recientes</option><option value="mejor">🏆 Mejor oferta primero</option></select>
+    </div>
+  </div>
+
+  <div style="max-width:900px;margin:0 auto;padding:16px">
+    <div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:16px">
+      <div style="display:flex;justify-content:space-between"><h2 id="tituloSeccion" style="margin:0;font-size:16px">📋 Mis Postulaciones Activas</h2><span id="contadorResultados" class="tiny"></span></div>
+      <div class="small" style="margin:6px 0 12px">Exporta tu respaldo (JSON) y guárdalo en iCloud Drive para verlo en tu otro dispositivo.</div>
+      <div id="contenedorPostulaciones" class="scroll"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA -->
+<div id="modalNuevaPostulacion" class="modal hidden">
+  <div class="card">
+    <div class="rowb"><b>➕ Nueva Postulación</b><button class="xbtn" onclick="cerrar('modalNuevaPostulacion')">✕</button></div>
+    <div style="background:#022c22;border:1px solid #065f46;border-radius:12px;padding:10px;margin:12px 0"><label class="tiny" style="color:#6ee7b7;font-weight:700">🪄 Autocompletar desde Indeed/OCC:</label><textarea id="texto_magico" placeholder="Pega aquí el texto de la vacante..." style="height:60px;margin:6px 0"></textarea><button class="btn btn-green" style="width:100%;font-size:11px" onclick="procesarTextoMagico()">✨ Rellenar Automático</button></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <input id="nueva_marca" placeholder="Marca / Empresa *"><input id="nueva_puesto" placeholder="Puesto *"><input id="nuevo_link" placeholder="Link URL"><input id="nueva_sueldo" placeholder="Sueldo ej. $15,000"><input id="nueva_distancia" type="number" placeholder="Distancia km ej. 8"><input id="nueva_prestaciones" placeholder="Prestaciones ej. SGMM, Fondo"><input id="nueva_contacto" placeholder="Reclutador"><input id="nueva_correo" placeholder="Correo"><input id="nuevo_tel" placeholder="Teléfono">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-green" style="flex:1" onclick="guardarNuevaPostulacion()">Guardar</button><button class="btn btn-dark" onclick="cerrar('modalNuevaPostulacion')">Cancelar</button></div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR -->
+<div id="modalEditarPostulacion" class="modal hidden">
+  <div class="card">
+    <div class="rowb"><b>✏️ Editar</b><button class="xbtn" onclick="cerrar('modalEditarPostulacion')">✕</button></div>
+    <input type="hidden" id="edit_id">
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+      <input id="edit_marca" placeholder="Marca"><input id="edit_puesto" placeholder="Puesto"><input id="edit_link" placeholder="Link"><input id="edit_sueldo" placeholder="Sueldo"><input id="edit_distancia" type="number" placeholder="Distancia km"><input id="edit_prestaciones" placeholder="Prestaciones"><input id="edit_contacto" placeholder="Contacto"><input id="edit_correo" placeholder="Correo"><input id="edit_tel1" placeholder="Tel 1"><input id="edit_tel2" placeholder="Tel 2">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-green" style="flex:1" onclick="guardarEdicionPostulacion()">Guardar Cambios</button><button class="btn btn-dark" onclick="cerrar('modalEditarPostulacion')">Cancelar</button></div>
+  </div>
+</div>
+
+<!-- MODAL CORREO -->
+<div id="modalCorreo" class="modal hidden">
+  <div class="card"><div class="rowb"><b id="tituloModalCorreo">✉️ Correo</b><button class="xbtn" onclick="cerrar('modalCorreo')">✕</button></div><textarea id="textoCorreo" style="height:200px;margin:12px 0"></textarea><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-green" style="width:100%;padding:13px" onclick="enviarDirecto()">🚀 Enviar directo</button><button class="btn btn-sky" style="flex:1" onclick="enviarCorreo()">📨 Con Mail</button><button class="btn btn-dark" onclick="abrirConfigEnvio()">⚙️</button><button class="btn btn-green" style="flex:1" onclick="copiarCorreo()">📋 Copiar</button><button class="btn btn-dark" onclick="cerrar('modalCorreo')">Cerrar</button></div><div class="tiny" style="margin-top:8px">🚀 envía sin abrir Mail (requiere internet y ⚙️ configurado). 📨 abre Mail para que toques Enviar. Los adjuntos no van en ninguno: agrégalos en Mail.</div></div>
+</div>
+
+<!-- MODAL ARCHIVO -->
+<div id="modalArchivo" class="modal hidden" style="background:rgba(0,0,0,.88)">
+  <div class="card"><div class="rowb"><b id="tituloModalArchivo">📄 Documento</b><button class="xbtn" onclick="cerrarModalArchivo()">✕</button></div><div id="contenidoArchivoVista" style="background:#0f172a;border:1px solid #334155;border-radius:12px;height:320px;display:flex;align-items:center;justify-content:center;margin:12px 0;overflow:hidden">Cargando...</div><div style="display:flex;gap:8px"><a id="btnDescargarArchivo" href="#" download class="btn btn-green" style="flex:1;text-decoration:none">📥 Descargar</a><button class="btn btn-dark" onclick="cerrarModalArchivo()">Cerrar</button></div></div>
+</div>
+
+<!-- MODAL EXPORTAR -->
+<div id="modalExport" class="modal hidden">
+  <div class="card">
+    <div class="rowb"><b>☁️ Exportar respaldo</b><button class="xbtn" onclick="cerrar('modalExport')">✕</button></div>
+    <div class="small" style="margin:8px 0">Toca <b>Copiar</b> y pega el texto en Notas o en un correo a ti mismo. Para restaurar: Importar → pegar.</div>
+    <textarea id="textoExport" style="height:180px" spellcheck="false" autocapitalize="off" autocorrect="off"></textarea>
+    <label class="small" style="display:flex;gap:8px;align-items:center;margin:10px 0 4px"><input type="checkbox" id="chkArchivos" onchange="refrescarExport()"> Incluir archivos adjuntos (INE, CURP… pesado)</label>
+    <div id="estadoExport" class="tiny" style="min-height:16px"></div>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn btn-green" style="flex:1" onclick="copiarExport()">📋 Copiar</button><button class="btn btn-sky" style="flex:1" onclick="descargarExport()">💾 Descargar .json</button><button class="btn btn-dark" onclick="cerrar('modalExport')">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- MODAL IMPORTAR -->
+<div id="modalImport" class="modal hidden">
+  <div class="card">
+    <div class="rowb"><b>📥 Importar respaldo</b><button class="xbtn" onclick="cerrar('modalImport')">✕</button></div>
+    <div class="small" style="margin:8px 0">Pega aquí el JSON de tu respaldo y toca <b>Cargar</b>. (El botón de archivo no funciona en el visor de Archivos de iOS; ábrelo en Safari para usarlo.)</div>
+    <textarea id="textoImport" placeholder='{"listaPostulaciones":[...]}' style="height:180px" spellcheck="false" autocapitalize="off" autocorrect="off"></textarea>
+    <div id="estadoImport" class="tiny" style="min-height:16px;margin-top:6px"></div>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn btn-green" style="flex:1" onclick="cargarImport()">✅ Cargar</button><button class="btn btn-sky" onclick="pegarPortapapeles()">📋 Pegar</button><label class="btn btn-dark">📂 Archivo<input id="inputImportar" type="file" accept=".json,application/json" style="display:none" onchange="importarArchivo(this)"></label><button class="btn btn-dark" onclick="cerrar('modalImport')">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- MODAL CONFIG ENVIO DIRECTO (EmailJS) -->
+<div id="modalConfigEnvio" class="modal hidden" style="z-index:70">
+  <div class="card">
+    <div class="rowb"><b>⚙️ Envío directo (EmailJS)</b><button class="xbtn" onclick="cerrar('modalConfigEnvio')">✕</button></div>
+    <div class="small" style="margin:8px 0">Pega los 3 datos de tu cuenta de emailjs.com. Se guardan solo en este dispositivo y no se incluyen en el respaldo.</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <input id="cfg_service" placeholder="Service ID (service_xxxxxxx)" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <input id="cfg_template" placeholder="Template ID (template_xxxxxxx)" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <input id="cfg_key" placeholder="Public Key" autocapitalize="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div id="estadoCfg" class="tiny" style="min-height:16px;margin-top:8px"></div>
+    <div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-green" style="flex:1" onclick="guardarConfigEnvio()">Guardar</button><button class="btn btn-dark" onclick="cerrar('modalConfigEnvio')">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR (reemplaza confirm()) -->
+<div id="modalConfirm" class="modal hidden" style="z-index:80">
+  <div class="card" style="max-width:340px"><div id="textoConfirm" style="font-weight:700;margin-bottom:14px"></div><div style="display:flex;gap:8px"><button class="btn btn-green" style="flex:1" onclick="respConfirm(true)">Sí</button><button class="btn btn-dark" style="flex:1" onclick="respConfirm(false)">No</button></div></div>
+</div>
+
+<div id="toast" class="hidden"></div>
+
+<script>
+/* ===== v2.32: compatible con file:// y visor de Archivos de iOS =====
+   - Sin login.  - localStorage SIEMPRE via safeGet/safeSet (con respaldo en memoria).
+   - Sin alert/confirm/prompt (el visor puede ignorarlos): toast y modal propios. */
+var miNombre="Omar Santiago Coca";
+var base64Archivos={};
+var mostrandoArchivados=false;
+var ETAPAS=['Postulación','Entrevista RH','Pruebas','Entrevista Operaciones','Documentación','Oferta / Contratación','Descartado / Archivado'];
+var DOCN=['INE','CURP/RFC','Domicilio','NSS/IMSS','CV/Acta'];
+
+var BASE=[
+{id:'skechers',marca:'SKECHERS / GRUPO CHARLY',colorBadge:'indigo',puesto:'Parque Vía Vallejo - Gerente de Tienda',sueldo:'$13,800 brutos + Comisiones + Fondo ahorro',contacto:'Jesús Manuel Vega López',tel1:'55 6353 8808',tel2:'+52 55 8039 9410',correo:'jvega@charly.com',link:'',etapa:'Entrevista Operaciones',notas:'Resultados 24 oct. En espera entrevista director.',distancia:12,prestaciones:'Comisiones, Fondo ahorro',sueldo_num:13800},
+{id:'kipling',marca:'KIPLING',colorBadge:'purple',puesto:'Parque Lindavista - Gerente de Tienda',sueldo:'$14,000 - $18,000 base + Comisiones',contacto:'Erika García (RH)',tel1:'+52 55 6678 1957',tel2:'',correo:'erika.garcia@vfc.com',link:'',etapa:'Entrevista RH',notas:'Viernes 11:30 am agendada. Psicoweb: Liderjr2026',distancia:8,prestaciones:'Comisiones',sueldo_num:16000},
+{id:'tumi',marca:'TUMI / SAMSONITE',colorBadge:'blue',puesto:'Santa Fe - Gerente de Tienda (TOP 1 MEJOR PAGADA)',sueldo:'$22,151 base + $9,451 garantizada 2 meses',contacto:'Valeria (RH TUMI)',tel1:'+52 55 8067 9358',tel2:'',correo:'valeria.rh@samsonite.com',link:'',etapa:'Entrevista RH',notas:'Jue 22 oct Teams realizado.',distancia:22,prestaciones:'Comisiones, SGMM, Fondo ahorro, Vales',sueldo_num:31602},
+{id:'puma',marca:'PUMA',colorBadge:'slate',puesto:'Antara Polanco - Assistant Store Manager',sueldo:'Ref: R39488 - Jornada Completa',contacto:'PUMA People Team',tel1:'',tel2:'',correo:'people.mexico@puma.com',link:'',etapa:'Postulación',notas:'23 oct - Confirmado: Sigues en la carrera.',distancia:15,prestaciones:'Comisiones',sueldo_num:14000},
+{id:'tnf',marca:'THE NORTH FACE',colorBadge:'red',puesto:'Oasis Coyoacán - Gerente Temporal (Palacio Hierro)',sueldo:'Palacio de Hierro Oasis Coyoacán',contacto:'Antonio Granados / Jibran',tel1:'+52 56 4169 1655',tel2:'',correo:'antonio.granados@palacio.com.mx',link:'',etapa:'Entrevista Operaciones',notas:'Videollamada Lunes 12:00 pm con Jibran.',distancia:6,prestaciones:'Comisiones',sueldo_num:13000},
+{id:'korean',marca:'KOREAN CODE 82',colorBadge:'teal',puesto:'Oasis Coyoacán - Gerente Skincare',sueldo:'$15,000 brutos + Comisiones + SGMM',contacto:'Psic. Josué García / Alejandra Soria',tel1:'',tel2:'',correo:'josue.garcia@koreancode82.com',link:'',etapa:'Entrevista RH',notas:'Lunes 26 oct 2:30pm AICM T1 Puerta 2.',distancia:6,prestaciones:'Comisiones, SGMM',sueldo_num:15000},
+{id:'pandora',marca:'PANDORA JEWELRY',colorBadge:'pink',puesto:'Kiosko City Carso - Assistant Store Manager',sueldo:'Lago Zurich 245, Amp Granada',contacto:'Irema García / Nayhem Chequer',tel1:'+52 55 5090 5031',tel2:'+52 55 8021 0499',correo:'irema.garcia@pandora.net',link:'',etapa:'Entrevista RH',notas:'Foto CV enviada a Irema.',distancia:14,prestaciones:'Comisiones',sueldo_num:14000}
+];
+var listaPostulaciones=clonar(BASE);
+
+/* ---------- almacenamiento seguro ---------- */
+var MEM={}; var almacenOK=true;
+function safeGet(k){
+  if(Object.prototype.hasOwnProperty.call(MEM,k)) return MEM[k];
+  try{var v=window.localStorage.getItem(k); return (v===undefined)?null:v;}catch(e){almacenOK=false;return null;}
+}
+function safeSet(k,v){
+  v=String(v); MEM[k]=v;
+  try{window.localStorage.setItem(k,v);}catch(e){almacenOK=false;}
+}
+function probarAlmacen(){
+  try{var t='vp_test';window.localStorage.setItem(t,'1');window.localStorage.removeItem(t);almacenOK=true;}catch(e){almacenOK=false;}
+}
+function actualizarEstado(){
+  var e=el('estadoAlmacen'); if(!e) return;
+  if(almacenOK){e.className='ok';e.textContent='✅ Guardado automático en este dispositivo.';}
+  else{e.className='warn';e.textContent='⚠️ Modo temporal: este visor no permite guardar. Tus cambios se pierden al cerrar. Usa ☁️ Exportar antes de salir, o abre el archivo en Safari.';}
+}
+
+/* ---------- utilidades ---------- */
+function el(id){return document.getElementById(id);}
+function clonar(o){return JSON.parse(JSON.stringify(o));}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function abrir(id){var m=el(id);if(m) m.classList.remove('hidden');}
+function cerrar(id){var m=el(id);if(m) m.classList.add('hidden');}
+var toastT=null;
+function toast(msg){var t=el('toast');t.textContent=msg;t.classList.remove('hidden');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.add('hidden');},2800);}
+var cbConfirm=null;
+function confirmar(msg,cb){el('textoConfirm').textContent=msg;cbConfirm=cb;abrir('modalConfirm');}
+function respConfirm(ok){cerrar('modalConfirm');var f=cbConfirm;cbConfirm=null;if(ok&&f) f();}
+function abrirUrl(url){try{var w=window.open(url,'_blank');if(!w) window.location.href=url;}catch(e){try{window.location.href=url;}catch(e2){}}}
+function copiarEn(ta,texto){
+  return new Promise(function(res){
+    function legacy(){try{ta.focus();ta.select();ta.setSelectionRange(0,999999999);res(!!document.execCommand('copy'));}catch(e){res(false);}}
+    try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(texto).then(function(){res(true);},legacy);return;}}catch(e){}
+    legacy();
+  });
+}
+function normalizar(p,i){
+  p=p||{};
+  var id=String(p.id||('imp_'+Date.now()+'_'+i)).replace(/[^A-Za-z0-9_-]/g,'_');
+  var s=function(v){return v==null?'':String(v);};
+  var sn=parseInt(p.sueldo_num); if(isNaN(sn)) sn=parseInt(s(p.sueldo).replace(/[^0-9]/g,''))||0;
+  return {id:id,marca:s(p.marca)||'Sin marca',colorBadge:s(p.colorBadge)||'emerald',puesto:s(p.puesto),sueldo:s(p.sueldo),contacto:s(p.contacto)||'Reclutamiento',tel1:s(p.tel1),tel2:s(p.tel2),correo:s(p.correo),link:s(p.link),etapa:s(p.etapa)||'Postulación',notas:s(p.notas),distancia:parseInt(p.distancia)||0,prestaciones:s(p.prestaciones),sueldo_num:sn};
+}
+function porId(id){for(var i=0;i<listaPostulaciones.length;i++) if(listaPostulaciones[i].id===id) return listaPostulaciones[i];return null;}
+function guardarLista(){safeSet('lista_postulaciones_custom',JSON.stringify(listaPostulaciones));actualizarEstado();}
+function leerExtras(id){try{var a=JSON.parse(safeGet('extras_'+id)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
+function clavesDocs(id){var k=['0','1','2','3','4'];leerExtras(id).forEach(function(x){k.push(x.k);});return k;}
+function calcularScore(p){var s=(p.sueldo_num||0)*0.5;var pr=(p.prestaciones||'').toLowerCase();if(pr.indexOf('sgmm')>-1) s+=3000;if(pr.indexOf('fondo')>-1) s+=2000;if(pr.indexOf('comision')>-1) s+=1500;if(pr.indexOf('vales')>-1) s+=1000;s-=(p.distancia||0)*50;return s;}
+
+/* ---------- exportar / importar (sin file picker obligatorio) ---------- */
+function construirDatos(conArchivos){
+  var d={version:'2.32',listaPostulaciones:listaPostulaciones,etapas:{},notas:{},files:{},docs:{},extras:{}};
+  listaPostulaciones.forEach(function(p){
+    var et=safeGet('etapa_'+p.id);if(et) d.etapas[p.id]=et;
+    var no=safeGet('notas_'+p.id);if(no!==null) d.notas[p.id]=no;
+    var ex=leerExtras(p.id);if(ex.length) d.extras[p.id]=ex;
+    clavesDocs(p.id).forEach(function(k){var c=safeGet('doc_'+p.id+'_'+k);if(c) d.docs[p.id+'_'+k]=c;});
+    if(conArchivos){
+      var f=base64Archivos[p.id];
+      if(!f){var raw=safeGet('files_b64_'+p.id);if(raw){try{f=JSON.parse(raw);}catch(e){}}}
+      if(f&&Object.keys(f).length) d.files[p.id]=f;
+    }
+  });
+  return d;
+}
+function exportarICloud(){abrir('modalExport');refrescarExport();}
+function refrescarExport(){
+  var con=el('chkArchivos').checked;
+  var txt=JSON.stringify(construirDatos(con),null,1);
+  el('textoExport').value=txt;
+  el('estadoExport').textContent=Math.round(txt.length/1024)+' KB'+(con?' (con archivos)':'');
+}
+function copiarExport(){
+  var ta=el('textoExport');
+  copiarEn(ta,ta.value).then(function(ok){el('estadoExport').textContent=ok?'✅ Copiado. Pégalo en Notas o en un correo.':'No se pudo copiar solo: el texto ya está seleccionado, usa Copiar del menú de iOS.';if(!ok){ta.focus();ta.select();}});
+}
+function descargarExport(){
+  try{
+    var blob=new Blob([el('textoExport').value],{type:'application/json'});var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download='mis-postulaciones-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},2000);el('estadoExport').textContent='Descarga iniciada. Si no aparece, usa Copiar.';
+  }catch(e){el('estadoExport').textContent='Descarga no disponible aquí. Usa Copiar.';}
+}
+function importarICloud(){el('textoImport').value='';el('estadoImport').textContent='';abrir('modalImport');}
+function pegarPortapapeles(){
+  try{navigator.clipboard.readText().then(function(t){el('textoImport').value=t;el('estadoImport').textContent='Texto pegado ('+t.length+' caracteres). Toca Cargar.';},function(){el('estadoImport').textContent='iOS no dio acceso al portapapeles: mantén presionado en el cuadro y elige Pegar.';});}
+  catch(e){el('estadoImport').textContent='Mantén presionado en el cuadro y elige Pegar.';}
+}
+function importarArchivo(input){
+  try{
+    var f=input&&input.files&&input.files[0];if(!f) return;
+    var r=new FileReader();r.onload=function(e){el('textoImport').value=e.target.result;aplicarImportacion(e.target.result);};
+    r.onerror=function(){el('estadoImport').textContent='No se pudo leer el archivo. Pega el JSON.';};
+    r.readAsText(f);input.value='';
+  }catch(e){el('estadoImport').textContent='Selector no disponible. Pega el JSON.';}
+}
+function cargarImport(){aplicarImportacion(el('textoImport').value);}
+function aplicarImportacion(texto){
+  var st=el('estadoImport');
+  texto=(texto||'').trim();
+  if(!texto){st.textContent='Pega primero el JSON.';return;}
+  var d;try{d=JSON.parse(texto);}catch(e){st.textContent='❌ JSON inválido: '+e.message;return;}
+  var lista=Array.isArray(d)?d:d.listaPostulaciones;
+  if(Array.isArray(lista)&&lista.length>0){listaPostulaciones=lista.map(normalizar);}
+  if(!Array.isArray(d)){
+    if(d.etapas) Object.keys(d.etapas).forEach(function(id){safeSet('etapa_'+id,d.etapas[id]);});
+    if(d.notas) Object.keys(d.notas).forEach(function(id){safeSet('notas_'+id,d.notas[id]);});
+    if(d.docs) Object.keys(d.docs).forEach(function(k){safeSet('doc_'+k,d.docs[k]);});
+    if(d.extras) Object.keys(d.extras).forEach(function(id){safeSet('extras_'+id,JSON.stringify(d.extras[id]));});
+    if(d.files) Object.keys(d.files).forEach(function(id){safeSet('files_b64_'+id,JSON.stringify(d.files[id]));base64Archivos[id]=d.files[id];});
+  }
+  guardarLista();cerrar('modalImport');renderizarPostulaciones();toast('✅ Importado: '+listaPostulaciones.length+' postulaciones');
+}
+function recuperarBase(){
+  confirmar('¿Recuperar las 7 marcas originales que falten? (No borra nada de lo que ya tienes)',function(){
+    var n=0;BASE.forEach(function(b){if(!porId(b.id)){listaPostulaciones.push(clonar(b));n++;}});
+    guardarLista();renderizarPostulaciones();toast(n?('Se recuperaron '+n):'Ya estaban todas las marcas');
+  });
+}
+
+/* ---------- nueva / editar / eliminar ---------- */
+function procesarTextoMagico(){var txt=el('texto_magico').value;if(!txt.trim()){toast('Pega texto');return;}var lineas=txt.split('\n').map(function(l){return l.trim();}).filter(function(l){return l;});if(lineas[0]) el('nueva_puesto').value=lineas[0];if(lineas[1]) el('nueva_marca').value=lineas[1];for(var i=0;i<lineas.length;i++){if(lineas[i].indexOf('$')>-1){el('nueva_sueldo').value=lineas[i];break;}}var m=txt.match(/https?:\/\/[^\s]+/);if(m) el('nuevo_link').value=m[0];toast('Datos analizados');}
+function abrirModalNuevaPostulacion(){['texto_magico','nuevo_link','nueva_marca','nueva_puesto','nueva_sueldo','nueva_distancia','nueva_prestaciones','nueva_contacto','nueva_correo','nuevo_tel'].forEach(function(id){el(id).value='';});abrir('modalNuevaPostulacion');}
+function guardarNuevaPostulacion(){
+  var marca=el('nueva_marca').value.trim();var puesto=el('nueva_puesto').value.trim();
+  if(!marca||!puesto){toast('Marca y puesto son obligatorios');return;}
+  var sueldoTxt=el('nueva_sueldo').value.trim();
+  listaPostulaciones.push(normalizar({id:'custom_'+Date.now(),marca:marca,colorBadge:'emerald',puesto:puesto,sueldo:sueldoTxt||'A tratar',contacto:el('nueva_contacto').value.trim(),tel1:el('nuevo_tel').value.trim(),correo:el('nueva_correo').value.trim(),link:el('nuevo_link').value.trim(),etapa:'Postulación',notas:'Nueva',distancia:el('nueva_distancia').value,prestaciones:el('nueva_prestaciones').value.trim(),sueldo_num:parseInt(sueldoTxt.replace(/[^0-9]/g,''))||0},0));
+  guardarLista();cerrar('modalNuevaPostulacion');renderizarPostulaciones();toast('Postulación agregada');
+}
+function abrirModalEditar(id){
+  var p=porId(id);if(!p) return;
+  el('edit_id').value=p.id;el('edit_marca').value=p.marca;el('edit_puesto').value=p.puesto;el('edit_link').value=p.link;el('edit_sueldo').value=p.sueldo;el('edit_distancia').value=p.distancia||'';el('edit_prestaciones').value=p.prestaciones||'';el('edit_contacto').value=p.contacto;el('edit_correo').value=p.correo;el('edit_tel1').value=p.tel1;el('edit_tel2').value=p.tel2;
+  abrir('modalEditarPostulacion');
+}
+function guardarEdicionPostulacion(){
+  var p=porId(el('edit_id').value);if(!p) return;
+  p.marca=el('edit_marca').value.trim();p.puesto=el('edit_puesto').value.trim();p.link=el('edit_link').value.trim();p.sueldo=el('edit_sueldo').value.trim();
+  p.sueldo_num=parseInt(p.sueldo.replace(/[^0-9]/g,''))||p.sueldo_num||0;p.distancia=parseInt(el('edit_distancia').value)||0;p.prestaciones=el('edit_prestaciones').value.trim();p.contacto=el('edit_contacto').value.trim()||'Reclutamiento';p.correo=el('edit_correo').value.trim();p.tel1=el('edit_tel1').value.trim();p.tel2=el('edit_tel2').value.trim();
+  guardarLista();cerrar('modalEditarPostulacion');renderizarPostulaciones();
+}
+function eliminarPostulacion(id){confirmar('¿Eliminar esta postulación?',function(){listaPostulaciones=listaPostulaciones.filter(function(p){return p.id!==id;});guardarLista();renderizarPostulaciones();});}
+function alternarArchivados(){mostrandoArchivados=!mostrandoArchivados;renderizarPostulaciones();}
+
+/* ---------- render ---------- */
+function filaDoc(id,k,nombre,extra){
+  return '<div id="row_doc_'+id+'_'+k+'" class="docrow"><label class="doclbl"><input type="checkbox" id="doc_'+id+'_'+k+'" onchange="guardarDatos(\''+id+'\')">'+esc(nombre)+'</label><div class="docact"><span id="file_name_'+id+'_'+k+'" class="tiny fname">Sin archivo</span><button id="btn_view_'+id+'_'+k+'" class="hidden btn btn-dark mini" onclick="verArchivo(\''+id+'\',\''+k+'\')">👁️</button><button id="btn_del_'+id+'_'+k+'" class="hidden btn btn-red mini" onclick="eliminarArchivo(\''+id+'\',\''+k+'\')">🗑️</button><label class="btn btn-dark mini">📂<input type="file" '+(extra?'':'accept="image/*,.pdf" ')+'onchange="subirArchivo(\''+id+'\',\''+k+'\',this)" style="display:none"></label></div></div>';
+}
+function renderizarPostulaciones(){
+  var container=el('contenedorPostulaciones');var html='';var archivadosCount=0;
+  var mapa={indigo:'#4f46e5',purple:'#9333ea',blue:'#2563eb',slate:'#475569',red:'#dc2626',teal:'#0d9488',pink:'#ec4899',emerald:'#059669'};
+  var q=(el('filtroBusqueda').value||'').toLowerCase();var fAv=el('filtroAvance').value||'';var fSu=el('filtroSueldo').value||'';var fDi=el('filtroDistancia').value||'';var fPr=el('filtroPrestaciones').value||'';var fMe=el('filtroMejorOferta').value||'';
+  var lista=listaPostulaciones.slice();
+  listaPostulaciones.forEach(function(p){var et=safeGet('etapa_'+p.id)||p.etapa;if(et==='Descartado / Archivado') archivadosCount++;});
+  if(fMe==='mejor') lista.sort(function(a,b){return calcularScore(b)-calcularScore(a);});
+  var mostrados=0;
+  lista.forEach(function(p){
+    var etapa=safeGet('etapa_'+p.id)||p.etapa;var nt=safeGet('notas_'+p.id);var notas=(nt!==null)?nt:p.notas;var esDesc=etapa==='Descartado / Archivado';
+    if((mostrandoArchivados&&!esDesc)||(!mostrandoArchivados&&esDesc)) return;
+    if(q&&!((p.marca+' '+p.puesto+' '+p.contacto).toLowerCase().indexOf(q)>-1)) return;
+    if(fAv&&etapa!==fAv) return;
+    if(fSu){var s=p.sueldo_num||0;var a=fSu.split('-').map(Number);if(s<a[0]||s>a[1]) return;}
+    if(fDi){var d=p.distancia||0;var b=fDi.split('-').map(Number);if(d<b[0]||d>b[1]) return;}
+    if(fPr&&(p.prestaciones||'').toLowerCase().indexOf(fPr.toLowerCase())<0) return;
+    mostrados++;
+    var col=mapa[p.colorBadge]||'#059669';var score=calcularScore(p);var id=p.id;
+    var opts=ETAPAS.map(function(e){return '<option'+(etapa===e?' selected':'')+'>'+e+'</option>';}).join('');
+    var docs=DOCN.map(function(n,i){return filaDoc(id,String(i),n,false);}).join('');
+    html+='<div class="job" style="'+(esDesc?'border-color:#7f1d1d':'')+'"><div class="job-top"><div class="avatar" style="background:'+col+'">'+esc(id.substring(0,3).toUpperCase())+'</div><div style="flex:1;min-width:0"><div><span class="badge" style="background:#1e1b4b;color:#a5b4fc">'+(listaPostulaciones.indexOf(p)+1)+'. '+esc(p.marca)+'</span> '+(fMe==='mejor'?'<span class="badge" style="background:#022c22;color:#6ee7b7;margin-left:6px">🏆 '+Math.round(score)+'</span>':'')+'</div><div style="font-weight:800;margin-top:4px">'+esc(p.puesto)+'</div><div class="small">'+esc(p.sueldo)+' '+(p.distancia?'• 📍 '+p.distancia+'km':'')+' '+(p.prestaciones?'• ✨ '+esc(p.prestaciones):'')+'</div><div class="small" style="color:#6ee7b7">👤 '+esc(p.contacto)+'</div><div class="small" style="color:#a5b4fc">✉️ '+esc(p.correo||'Sin correo')+'</div><div class="small">📞 '+esc(p.tel1)+' '+(p.tel2?'| '+esc(p.tel2):'')+'</div>'+(p.link?'<a href="'+esc(p.link)+'" target="_blank" style="font-size:11px;color:#22d3ee">🔗 Ver vacante</a>':'')+'</div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn btn-dark" style="font-size:11px" onclick="abrirModalEditar(\''+id+'\')">✏️</button><button class="btn btn-red" style="font-size:11px" onclick="eliminarPostulacion(\''+id+'\')">🗑️</button></div></div>'
+    +'<div style="background:rgba(15,23,42,.6);border:1px solid #1e293b;border-radius:10px;padding:10px;margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center"><span class="tiny" style="color:#fbbf24;font-weight:700">Etapa:</span><select id="etapa_'+id+'" onchange="cambiarEtapa(\''+id+'\')" style="width:200px;padding:6px;font-size:13px">'+opts+'</select></div><div style="margin-top:8px"><span class="tiny">Notas:</span><input id="notas_'+id+'" value="'+esc(notas)+'" onchange="guardarDatos(\''+id+'\')" style="padding:8px;margin-top:4px"></div></div>'
+    +'<div id="wrapper_check_'+id+'" style="display:'+(etapa==='Documentación'?'block':'none')+';background:rgba(2,44,34,.4);border:1px solid #065f46;border-radius:10px;padding:10px;margin-top:10px"><div style="display:flex;justify-content:space-between"><span class="tiny" style="color:#6ee7b7;font-weight:700">📁 Expediente</span><button class="btn btn-green mini" onclick="descargarTodo(\''+id+'\')">📥 Todo</button></div><div id="container_check_'+id+'" style="margin-top:8px">'+docs+'</div><div style="display:flex;gap:6px;margin-top:8px"><input id="nuevo_doc_'+id+'" placeholder="Agregar doc extra..." style="flex:1;padding:6px;font-size:13px"><button class="btn btn-green" style="font-size:11px" onclick="agregarDocumentoExtra(\''+id+'\')">+ Agregar</button></div></div>'
+    +'<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap"><button class="btn btn-green" style="flex:1" onclick="enviarWA(\''+id+'\')">💬 WA</button><button class="btn btn-dark" style="flex:1" onclick="mostrarCorreo(\''+id+'\')">✉️ Plantilla</button><button class="btn btn-sky" style="width:100%;margin-top:4px" onclick="prepararCorreoDirecto(\''+id+'\')">📧 Enviar a '+esc((p.contacto||'').split(' ')[0])+'</button></div></div>';
+  });
+  container.innerHTML=html||'<div class="small" style="text-align:center;padding:20px">No hay resultados con esos filtros</div>';
+  el('btnVerArchivados').textContent='📁 ('+archivadosCount+')';
+  el('tituloSeccion').textContent=mostrandoArchivados?'📁 Archivadas':'📋 Mis Postulaciones Activas';
+  el('contadorResultados').textContent=mostrados+' de '+listaPostulaciones.length;
+  cargarDatosGuardadosLogica();
+  actualizarEstado();
+}
+
+/* ---------- datos por postulación ---------- */
+function cambiarEtapa(id){var s=el('etapa_'+id);var w=el('wrapper_check_'+id);if(w&&s) w.style.display=(s.value==='Documentación')?'block':'none';guardarDatos(id);if(s&&s.value==='Descartado / Archivado') setTimeout(renderizarPostulaciones,300);}
+function guardarDatos(id){
+  var se=el('etapa_'+id),sn=el('notas_'+id);
+  if(se) safeSet('etapa_'+id,se.value);if(sn) safeSet('notas_'+id,sn.value);
+  clavesDocs(id).forEach(function(k){var cb=el('doc_'+id+'_'+k);if(cb) safeSet('doc_'+id+'_'+k,cb.checked);});
+  if(base64Archivos[id]) safeSet('files_b64_'+id,JSON.stringify(base64Archivos[id]));
+  guardarLista();
+}
+function marcarArchivo(id,k,name){
+  var span=el('file_name_'+id+'_'+k);if(span){span.textContent=name;span.style.color='#6ee7b7';span.style.fontWeight='700';}
+  var v=el('btn_view_'+id+'_'+k);if(v) v.classList.remove('hidden');var d=el('btn_del_'+id+'_'+k);if(d) d.classList.remove('hidden');
+}
+function cargarDatosGuardadosLogica(){
+  listaPostulaciones.forEach(function(p){
+    var id=p.id;
+    var etapa=safeGet('etapa_'+id);var notas=safeGet('notas_'+id);
+    if(etapa&&el('etapa_'+id)) el('etapa_'+id).value=etapa;
+    if(notas!==null&&el('notas_'+id)) el('notas_'+id).value=notas;
+    var cont=el('container_check_'+id);
+    if(cont) leerExtras(id).forEach(function(x){if(!el('row_doc_'+id+'_'+x.k)) cont.insertAdjacentHTML('beforeend',filaDoc(id,x.k,x.n,true));});
+    clavesDocs(id).forEach(function(k){var cb=el('doc_'+id+'_'+k);if(cb&&safeGet('doc_'+id+'_'+k)==='true') cb.checked=true;});
+    var raw=safeGet('files_b64_'+id);
+    if(raw&&!base64Archivos[id]){try{base64Archivos[id]=JSON.parse(raw);}catch(e){}}
+    if(base64Archivos[id]) Object.keys(base64Archivos[id]).forEach(function(k){marcarArchivo(id,k,base64Archivos[id][k].name);});
+  });
+}
+function agregarDocumentoExtra(id){
+  var input=el('nuevo_doc_'+id);var val=input.value.trim();if(!val) return;
+  var k='extra_'+Date.now();var ex=leerExtras(id);ex.push({k:k,n:val});safeSet('extras_'+id,JSON.stringify(ex));
+  el('container_check_'+id).insertAdjacentHTML('beforeend',filaDoc(id,k,val,true));input.value='';guardarDatos(id);
+}
+function subirArchivo(id,k,input){
+  try{
+    if(!(input.files&&input.files[0])) return;var file=input.files[0];var r=new FileReader();
+    r.onload=function(e){
+      marcarArchivo(id,k,file.name);var cb=el('doc_'+id+'_'+k);if(cb) cb.checked=true;
+      if(!base64Archivos[id]) base64Archivos[id]={};base64Archivos[id][k]={name:file.name,data:e.target.result};guardarDatos(id);
+      if(!almacenOK) toast('Archivo cargado, pero este visor no lo guarda. Ábrelo en Safari.');
+    };
+    r.readAsDataURL(file);
+  }catch(e){toast('El selector de archivos no está disponible en este visor');}
+}
+function eliminarArchivo(id,k){
+  confirmar('¿Eliminar este archivo?',function(){
+    if(base64Archivos[id]) delete base64Archivos[id][k];
+    var span=el('file_name_'+id+'_'+k);if(span){span.textContent='Sin archivo';span.style.color='';span.style.fontWeight='';}
+    var v=el('btn_view_'+id+'_'+k);if(v) v.classList.add('hidden');var d=el('btn_del_'+id+'_'+k);if(d) d.classList.add('hidden');
+    var cb=el('doc_'+id+'_'+k);if(cb) cb.checked=false;guardarDatos(id);
+  });
+}
+function verArchivo(id,k){
+  var f=base64Archivos[id]&&base64Archivos[id][k];if(!f) return;
+  el('tituloModalArchivo').textContent='📄 '+f.name;var vista=el('contenidoArchivoVista');
+  if(f.data.indexOf('data:image/')===0) vista.innerHTML='<img src="'+f.data+'" style="max-height:300px;max-width:100%;border-radius:12px">';
+  else vista.innerHTML='<iframe src="'+f.data+'" style="width:100%;height:300px;border:0;border-radius:12px;background:white"></iframe>';
+  var a=el('btnDescargarArchivo');a.href=f.data;a.download=f.name;abrir('modalArchivo');
+}
+function cerrarModalArchivo(){cerrar('modalArchivo');el('contenidoArchivoVista').innerHTML='';}
+function descargarTodo(id){
+  if(!base64Archivos[id]||!Object.keys(base64Archivos[id]).length){toast('No hay documentos');return;}
+  Object.keys(base64Archivos[id]).forEach(function(k){var f=base64Archivos[id][k];var a=document.createElement('a');a.href=f.data;a.download=f.name;document.body.appendChild(a);a.click();a.remove();});
+  toast('Descargando…');
+}
+
+/* ---------- WhatsApp y correos ---------- */
+function enviarWA(id){
+  var p=porId(id);if(!p) return;
+  var tel=(p.tel1||'').replace(/[^0-9]/g,'');if(tel.length===10) tel='52'+tel;
+  var msg='Hola '+p.contacto+'! Consulto novedad sobre '+p.puesto+' en '+p.marca+'. Sigo muy interesado. Saludos, '+miNombre+'.';
+  abrirUrl(tel?('https://wa.me/'+tel+'?text='+encodeURIComponent(msg)):('https://wa.me/?text='+encodeURIComponent(msg)));
+}
+function mostrarCorreo(id){
+  var p=porId(id);if(!p) return;
+  el('tituloModalCorreo').textContent='✉️ Seguimiento';
+  el('textoCorreo').value='Para: '+p.correo+'\nAsunto: Seguimiento '+p.puesto+' - '+miNombre+'\n\nEstimado/a '+p.contacto+',\n\nReitero mi interés en '+p.puesto+' en '+p.marca+'.\n\nQuedo atento.\n\nSaludos,\n'+miNombre;
+  abrir('modalCorreo');
+}
+function prepararCorreoDirecto(id){
+  var p=porId(id);if(!p) return;var lista='';
+  if(base64Archivos[id]) Object.keys(base64Archivos[id]).forEach(function(k){lista+='• '+base64Archivos[id][k].name+'\n';});
+  if(!lista) lista='Expediente listo.\n';
+  el('tituloModalCorreo').textContent='📧 Para '+(p.contacto||'').split(' ')[0];
+  el('textoCorreo').value='Para: '+p.correo+'\nAsunto: Expediente '+p.puesto+' - '+miNombre+'\n\nEstimado/a '+p.contacto+',\n\nComparto documentos para '+p.puesto+' en '+p.marca+'.\n\n'+lista+'\nSaludos,\n'+miNombre;
+  abrir('modalCorreo');
+}
+function armarMailto(texto){
+  var l=String(texto||'').split('\n');var para='',asunto='',i=0;
+  if(/^Para:/i.test(l[0]||'')){para=l[0].replace(/^Para:\s*/i,'').trim();i=1;}
+  if(/^Asunto:/i.test(l[i]||'')){asunto=l[i].replace(/^Asunto:\s*/i,'').trim();i++;}
+  var cuerpo=l.slice(i).join('\n').replace(/^\n+/,'');
+  return 'mailto:'+encodeURIComponent(para).replace(/%40/g,'@').replace(/%2C/g,',')+'?subject='+encodeURIComponent(asunto)+'&body='+encodeURIComponent(cuerpo);
+}
+function enviarCorreo(){
+  var ta=el('textoCorreo');var url=armarMailto(ta.value);
+  if(!/^mailto:[^?]+\?/.test(url)){toast('Falta el correo del destinatario. Edítalo en "Para:"');return;}
+  try{window.location.href=url;}catch(e){}
+  setTimeout(function(){toast('Si Mail no se abrió, usa Copiar y pégalo en tu correo');},1500);
+}
+/* ---------- envío directo vía EmailJS (REST, sin librerías) ---------- */
+var EMAILJS_DEFAULT={s:'service_pj0zuyr',t:'template_zuycu6p',k:'rgmWFJ7Gc7iwHhvAk'};
+function leerCfgEnvio(){try{var c=JSON.parse(safeGet('emailjs_cfg')||'{}');if(c&&c.s&&c.t&&c.k) return c;}catch(e){}return EMAILJS_DEFAULT;}
+function abrirConfigEnvio(){
+  var c=leerCfgEnvio();
+  el('cfg_service').value=c.s||'';el('cfg_template').value=c.t||'';el('cfg_key').value=c.k||'';
+  el('estadoCfg').textContent=almacenOK?'':'⚠️ Este visor no guarda: tendrás que pegarlos cada vez. Úsalo mejor desde Safari.';
+  abrir('modalConfigEnvio');
+}
+function guardarConfigEnvio(){
+  var s=el('cfg_service').value.trim(),t=el('cfg_template').value.trim(),k=el('cfg_key').value.trim();
+  if(!s||!t||!k){el('estadoCfg').textContent='Faltan datos: se necesitan los 3.';return;}
+  safeSet('emailjs_cfg',JSON.stringify({s:s,t:t,k:k}));cerrar('modalConfigEnvio');toast('✅ Configuración guardada');
+}
+function enviarDirecto(){
+  var cfg=leerCfgEnvio();if(!cfg){toast('Primero configura el envío (botón ⚙️)');abrirConfigEnvio();return;}
+  var l=el('textoCorreo').value.split('\n'),para='',asunto='',i=0;
+  if(/^Para:/i.test(l[0]||'')){para=l[0].replace(/^Para:\s*/i,'').trim();i=1;}
+  if(/^Asunto:/i.test(l[i]||'')){asunto=l[i].replace(/^Asunto:\s*/i,'').trim();i++;}
+  var cuerpo=l.slice(i).join('\n').replace(/^\n+/,'');
+  if(!para){toast('Falta el correo del destinatario en "Para:"');return;}
+  if(!navigator.onLine){toast('Sin internet. Usa "Con Mail" o Copiar');return;}
+  toast('Enviando…');
+  var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;var to=setTimeout(function(){if(ctrl) ctrl.abort();},15000);
+  fetch('https://api.emailjs.com/api/v1.0/email/send',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl?ctrl.signal:undefined,
+    body:JSON.stringify({service_id:cfg.s,template_id:cfg.t,user_id:cfg.k,template_params:{to_email:para,subject:asunto,message:cuerpo,from_name:miNombre}})})
+  .then(function(r){return r.text().then(function(t){return {ok:r.ok,t:t};});})
+  .then(function(r){clearTimeout(to);if(r.ok){cerrar('modalCorreo');toast('✅ Correo enviado a '+para);}else{toast('❌ EmailJS: '+String(r.t).slice(0,120));}})
+  .catch(function(e){clearTimeout(to);toast('❌ No se pudo enviar (red o visor bloqueado). Usa "Con Mail".');});
+}
+function copiarCorreo(){var ta=el('textoCorreo');copiarEn(ta,ta.value).then(function(ok){if(ok){cerrar('modalCorreo');toast('✅ Copiado');}else toast('Texto seleccionado: usa Copiar de iOS');});}
+
+/* ---------- inicio ---------- */
+function iniciarApp(){
+  probarAlmacen();
+  var saved=safeGet('lista_postulaciones_custom');
+  if(saved){try{var p=JSON.parse(saved);if(Array.isArray(p)&&p.length>0) listaPostulaciones=p.map(normalizar);}catch(e){}}
+  /* si saved es null, [] o inválido: se queda la lista BASE con las 7 marcas */
+  try{renderizarPostulaciones();}
+  catch(err){el('contenedorPostulaciones').innerHTML='<div class="small" style="color:#fca5a5;padding:12px">Error al mostrar: '+esc(err.message)+'. Toca “🔄 7 marcas”.</div>';}
+  actualizarEstado();
+}
+(function(){ /* icono para pantalla de inicio */
+  try{var c=document.createElement('canvas');c.width=c.height=180;var x=c.getContext('2d');x.fillStyle='#10b981';x.fillRect(0,0,180,180);x.fillStyle='#0f172a';x.font='900 84px -apple-system,Helvetica,Arial,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('VP',90,96);
+  var l=document.createElement('link');l.rel='apple-touch-icon';l.href=c.toDataURL('image/png');document.head.appendChild(l);}catch(e){}
+})();
+iniciarApp();
+</script>
+</body>
+</html>
